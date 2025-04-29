@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Playground</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Azure OpenAI Image Generation Playground</h1>
+
+    <!-- Move the api-key-section outside the container -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <section id="api-key-section">
+                <h2>Configuration</h2>
+                <label for="api-key">API Key (stored in your browser)</label>
+                <input type="password" id="api-key" placeholder="a1x3b2y3...">
+                <label for="api-url">Endpoint:</label>
+                <input type="text" id="api-url" placeholder="https://...openai.azure.com/..../generations?api-version=2025-04-01-preview">
+                <button id="save-key-button">Save & Apply</button>
+                <small><p id="key-status">Status: No key saved.</p></small>
+            </section>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <div class="container left-column">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="generate">Generate Image</button>
+                <button class="tab-button" data-tab="edit">Edit Image</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Generate Image Tab -->
+                <section id="generate-tab" class="tab-pane active">
+                    <!-- Move existing generation controls here -->
+                    <div id="generation-controls">
+                        <div class="model-row">
+                            <label for="model">Model:</label>
+                            <div class="model-control">
+                                <select id="model">
+                                    <option value="gpt-image-1" selected>gpt-image-1</option>
+                                    <option value="dall-e-3">dall-e-3</option>
+                                    <option value="dall-e-2">dall-e-2</option>
+                                </select>
+                                <button id="model-settings" class="icon-button" title="Model Settings">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <label for="prompt">Prompt:</label>
+                        <textarea id="prompt" rows="4" placeholder="Enter prompt... (max length varies by model)"></textarea>
+
+                        <div class="options">
+                            <div class="option-item">
+                                <label for="size">Size:</label>
+                                <select id="size">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="quality">Quality:</label>
+                                <select id="quality">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="n">Number of Images (n):</label>
+                                <select id="n">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+
+                            <!-- DALL-E 3 Specific Options -->
+                            <div id="dalle3-options" class="model-specific-options option-item" style="display: none;">
+                                <label for="style">Style:</label>
+                                <select id="style">
+                                    <option value="vivid" selected>Vivid</option>
+                                    <option value="natural">Natural</option>
+                                </select>
+                            </div>
+
+                            <!-- GPT-Image-1 Specific Options -->
+                            <div class="option-item gpt-image-1-option" style="display: none;">
+                                <label for="background">Background:</label>
+                                <select id="background">
+                                    <option value="auto" selected>Auto</option>
+                                    <option value="transparent">Transparent</option>
+                                    <option value="opaque">Opaque</option>
+                                </select>
+                            </div>
+                            <div class="option-item gpt-image-1-option" style="display: none;">
+                                <label for="moderation">Moderation:</label>
+                                <select id="moderation">
+                                    <option value="auto" selected>Auto</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="option-item gpt-image-1-option" style="display: none;">
+                                <label for="output_format">Output Format:</label>
+                                <select id="output_format">
+                                    <option value="png" selected>PNG</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="webp">WEBP</option>
+                                </select>
+                            </div>
+                            <div class="option-item gpt-image-1-option" style="display: none;">
+                                <label for="output_compression">Output Compression:</label>
+                                <input type="number" id="output_compression" value="100" min="0" max="100" step="1">
+                            </div>
+                        </div>
+
+                        <button id="generate-button">Generate Image</button>
+                        <br><br><div id="status-message"></div>
+                    </div>
+                </section>
+
+                <!-- Edit Image Tab -->
+                <section id="edit-tab" class="tab-pane">
+                    <div id="edit-controls">
+                        <input type="file" id="image-upload" accept="image/*">
+                        <textarea id="edit-prompt" rows="4" placeholder="Describe the changes you want to make..."></textarea>
+                        <button id="edit-button" disabled>Edit Image</button>
+                        <br><br>
+                        <div id="edit-status-message"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <section id="results-section">
+                <div id="image-history">
+                    <h3>Recent Images</h3>
+                    <div id="gallery">
+                        <div id="image-result">
+                        <!-- Latest generated image will be displayed here -->
+                    </div>
+                        <!-- Historical images will be displayed here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

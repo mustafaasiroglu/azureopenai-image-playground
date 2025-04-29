@@ -1,0 +1,449 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    line-height: 1.4;  /* reduced from 1.6 */
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    font-size: 14px;  /* added base font size */
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+    margin-bottom: 5px;
+    color: #555;
+}
+
+h1 {
+    font-size: 1.8rem;  /* reduced from default */
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.4rem;  /* reduced from default */
+    margin-bottom: 15px;
+    color: #555;
+}
+
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: smaller
+}
+
+input[type="password"],
+input[type="number"],
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 7px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;  /* reduced from 1rem */
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    display: inline-block;
+    background: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;  /* reduced from 1rem */
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+#save-key-button {
+    float: right;
+}
+
+#key-status {
+    margin-top: 10px;
+    font-style: italic;
+    color: #666;
+}
+
+small {
+    display: block;
+    margin-top: 5px;
+    color: #888;
+    font-size: 0.8em;  /* reduced from 0.9em */
+}
+
+.options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#generate-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;  /* reduced from 1.1rem */
+    margin-top: 10px;
+}
+
+#status-message {
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+#image-result {
+    max-width: 100%;
+}
+
+#image-result img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#image-history {
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+#gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-item {
+    position: relative;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+.gallery-item .prompt {
+    font-size: 0.75rem;  /* reduced from 0.8rem */
+    margin-top: 0.5rem;
+    color: #666;
+}
+
+.gallery-item .timestamp {
+    font-size: 0.65rem;  /* reduced from 0.7rem */
+    color: #999;
+}
+
+
+
+.gallery-item .delete-btn {
+    position: relative;
+    top: 7px;
+    right: 5px;
+    margin: 4px;
+    float: right;
+    border-radius: 7px;
+    background: #ffffffa3;
+    border: 1px solid gray;
+    padding: 5px;
+    height: 21px;
+    font-size: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+}
+.gallery-item .delete-btn:hover {
+    background: #ffffff;
+    color: #000;
+    border: 1px solid #007bff;
+}
+
+/* Placeholder styling for main result area */
+#image-result:empty {
+    background-color: #f0f0f0;
+    min-height: 512px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+/* Placeholder styling for gallery items */
+#gallery:empty {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+
+
+
+
+/* Style for actual images when they're present */
+#image-result img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.gradient-background {
+        max-width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+        opacity: 0.6;
+        border-radius: 8px;
+        background: linear-gradient(300deg,deepskyblue,darkviolet,#fff000);
+        background-size: 180% 180%;
+        animation: gradient-animation 2s ease infinite;
+      }
+      
+      @keyframes gradient-animation {
+        0% {
+          background-position: 0% 50%;
+          background: linear-gradient(300deg);
+        }
+        50% {
+          background-position: 100% 50%;
+          background: linear-gradient(100deg);
+        }
+        100% {
+          background-position: 0% 50%;
+          background: linear-gradient(300deg);
+        }
+      
+}
+
+#gallery img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    aspect-ratio: 1;
+}
+
+/* Basic Mobile Responsiveness */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.6rem;  /* reduced from 1.8rem */
+    }
+
+    h2 {
+        font-size: 1.2rem;  /* reduced from 1.3rem */
+    }
+
+    .options {
+        grid-template-columns: 1fr; /* Stack options vertically */
+    }
+
+    #save-key-button {
+        margin-left: 0;
+        margin-top: 10px; /* Add space when stacked */
+        display: block; /* Make it full width */
+        width: 100%;
+    }
+}
+
+/* Step 8: Option Descriptions and Layout */
+.option-item {
+    /* Grid handles layout, add padding/margin if needed */
+}
+
+.option-description {
+    font-size: 0.75em;  /* reduced from 0.85em */
+    color: #666;
+    margin-top: 5px; /* Space between control and description */
+    margin-bottom: 0; /* Reset default paragraph margin */
+}
+
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.left-column {
+    max-width: 100%;
+}
+
+.right-column {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+    .two-column {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .right-column {
+        position: static;
+        max-height: none;
+    }
+}
+
+.model-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    margin-bottom: 1rem;
+}
+
+.model-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.model-control select {
+    flex: 1;
+}
+
+.icon-button {
+    margin-top: -16px;
+    background: #007bff;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.icon-button:hover {
+    background: #0056b3;
+    color: #fff;
+}
+
+.icon-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.close-button {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    color: #8f8f8f;
+    border-radius: 0px;
+}
+
+.tab-button:hover {
+    background-color: #f5f5f5;
+}
+
+.tab-button.active {
+    border-bottom: 2px solid #007bff;
+    color: #007bff;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+#edit-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#image-upload {
+    margin: 1rem 0;
+}
+
