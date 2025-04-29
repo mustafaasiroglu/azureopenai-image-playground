@@ -463,20 +463,27 @@ function updateGallery() {
         <div class="gallery-item" data-id="${item.id}">
             <img src="${item.imageData}" alt="${item.prompt}" 
                  onclick="showInMainView('${item.imageData}', '${item.prompt}')">
-            <button class="delete-btn" onclick="downloadHistoryItem(${item.id})">Save</button>
-            <button class="delete-btn" onclick="deleteHistoryItem(${item.id})">Delete</button>
+            <button style="display:none" class="delete-btn" onclick="downloadHistoryItem(${item.id})">Save</button>
+            <button style="display:none" class="delete-btn" onclick="deleteHistoryItem(${item.id})">Delete</button>
             
             <div class="prompt">${item.prompt}</div>
-            <div class="timestamp">${new Date(item.timestamp).toLocaleString()}</div>
+            <div class="timestamp">${new Date(item.timestamp).toLocaleString("tr-TR")}</div>
         </div>
     `).join('');
 }
 
 // Function to show image in main view
 function showInMainView(imageData, prompt) {
-    const imageResult = document.getElementById('image-result');
-    imageResult.innerHTML = `<img src="${imageData}" alt="${prompt}">`;
-    document.getElementById('prompt').value = prompt;
+    
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('modalCaption');
+    
+    modal.style.display = "block";
+    modalImg.src = imageData;
+    modalImg.alt = prompt; // Set alt text for accessibility
+    modalCaption.innerHTML = prompt
+
 }
 
 // Function to delete history item
@@ -510,4 +517,17 @@ function handleGeneratedImage(imageData) {
     // imageResult.innerHTML = `<img src="${imageData}" alt="${prompt}">`;
     imageResult.innerHTML = ``;
     saveToHistory(imageData, prompt);
+}
+
+
+// Close modal when clicking the x
+document.querySelector('.modal-close').onclick = function() {
+    document.getElementById('imageModal').style.display = "none";
+}
+
+// Close modal when clicking outside the image
+document.getElementById('imageModal').onclick = function(e) {
+    if (e.target === this) {
+        this.style.display = "none";
+    }
 }
