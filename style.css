@@ -308,7 +308,7 @@ small {
 }
 
 .right-column {
-    position: sticky;
+    /* position: sticky; */
     top: 2rem;
     align-self: start;
     max-height: calc(100vh - 4rem);
@@ -477,6 +477,7 @@ small {
     color: #ccc;
     padding: 10px 0;
     font-size: 17px;
+    background-color: #000;
 }
 
 .close {
