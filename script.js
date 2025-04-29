@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const OPENAI_API_KEY_NAME = 'openai_api_key';
     const OPENAI_API_ENDPOINT = 'https://openai-mustafa-uaenorth.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview';
 
+    let uploadedimages = []; // New: Array to hold uploaded images
+
     // Modal functionality
     const modal = document.getElementById('settings-modal');
     const settingsButton = document.getElementById('model-settings');
@@ -60,12 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             // Remove active class from all buttons and panes
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
 
             // Add active class to clicked button and corresponding pane
             button.classList.add('active');
             const tabId = button.getAttribute('data-tab');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
+            if(tabId === 'edit'){
+                document.getElementById('uploadlabel').style.display = 'block'; // Show image upload for edit tab
+            }
+            else{
+                document.getElementById('uploadlabel').style.display = 'none'; // Hide image upload for other tabs
+            }
         });
     });
 
@@ -75,9 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     imageUpload.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
-            editButton.disabled = false;
+            uploadedimages = Array.from(e.target.files); // Store the actual File objects
+            document.getElementById('uploadlabel').innerHTML = uploadedimages.length + " Image(s) Selected";
+            document.getElementById('uploadlabel').setAttribute("title", uploadedimages.map(file => file.name).join(", ")); // Show file names on hover
         } else {
-            editButton.disabled = true;
+            uploadedimages = []; // Clear if no files selected
+            document.getElementById('uploadlabel').innerHTML = "+ Add Image(s)";
         }
     });
 
@@ -254,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedModel = modelSelect.value;
         const modelConfig = modelOptions[selectedModel];
         const prompt = promptInput.value.trim();
+        const inputimage = document.getElementById('image-upload').files[0]; // New: Get uploaded image
 
         // --- Input Validation ---
         if (!apiKey) {
@@ -323,6 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     requestBody.output_compression = parseInt(outputCompressionInput.value);
                 }
             }
+            if (uploadedimages.length > 0) {
+                requestBody.image = uploadedimages; // New: Add uploaded images to request body
+            }
             // response_format is implicitly b64_json.
         }
 
@@ -335,16 +349,42 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="timestamp">...</div>
         </div>
     `+ gallery.innerHTML; // Prepend new item to gallery
+        
+        
         try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'api-key': apiKey, // For Azure OpenAI
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify(requestBody)
-            });
+            response = null; // Reset response variable
+            if(uploadedimages.length > 0){
+                const formData = new FormData();
+                formData.append('model', selectedModel);
+                formData.append('prompt', prompt);
+                formData.append('n', parseInt(nInput.value) || 1);
+                formData.append('image', uploadedimages[0]); // Send the actual File object
+                formData.append('size', sizeSelect.value);
+                formData.append('quality', qualitySelect.value);
+                formData.append('background', backgroundSelect.value);
+                formData.append('moderation', moderationSelect.value);
+                formData.append('output_format', outputFormatSelect.value);
+                formData.append('output_compression', parseInt(outputCompressionInput.value) || 0);
+
+                response = await fetch(apiUrl.replace("generations","edits"), {
+                    method: 'POST',
+                    headers: {
+                        'api-key': apiKey, // For Azure OpenAI
+                    },
+                    body: formData
+                });
+
+            }else{
+                response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'api-key': apiKey, // For Azure OpenAI
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+            }
 
             const data = await response.json();
             console.log('Received response from OpenAI:', data);
@@ -463,13 +503,16 @@ function updateGallery() {
         <div class="gallery-item" data-id="${item.id}">
             <img src="${item.imageData}" alt="${item.prompt}" 
                  onclick="showInMainView('${item.imageData}', '${item.prompt}')">
-            <button style="display:none" class="delete-btn" onclick="downloadHistoryItem(${item.id})">Save</button>
-            <button style="display:none" class="delete-btn" onclick="deleteHistoryItem(${item.id})">Delete</button>
             
             <div class="prompt">${item.prompt}</div>
-            <div class="timestamp">${new Date(item.timestamp).toLocaleString("tr-TR")}</div>
+            <div class="timestamp">
+                <button class="smallbutton" title="Download" onclick="downloadHistoryItem(${item.id})">⬇️</button>
+                <button class="smallbutton" title="Delete" onclick="deleteHistoryItem(${item.id})">❌</button> 
+            </div>
         </div>
     `).join('');
+
+    //${new Date(item.timestamp).toLocaleString("tr-TR")}
 }
 
 // Function to show image in main view

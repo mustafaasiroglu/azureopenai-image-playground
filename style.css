@@ -9,9 +9,32 @@ body {
     font-family: sans-serif;
     line-height: 1.4;  /* reduced from 1.6 */
     padding: 20px;
-    background-color: #f4f4f4;
+    background: linear-gradient(0deg, #6ea7dd9c, #d2dd6e59, #dd6ed34a, #eef1fe);
     color: #333;
+    min-height: 100vh;
     font-size: 14px;  /* added base font size */
+}
+
+::-webkit-scrollbar{
+	width: 5px;
+}
+
+::-webkit-scrollbar-track-piece{
+	background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb{
+    background-color: #515151ac;
+    outline: none;
+    outline-offset: -2px;
+    border: 0.5px solid #b7b7b7b3;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+	background-color: #848484;
+    border-radius: 5px;
 }
 
 .container {
@@ -100,7 +123,7 @@ small {
 .options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    gap: 10px 20px;
     margin-bottom: 20px;
 }
 
@@ -153,18 +176,24 @@ small {
     width: 100%;
     height: auto;
     cursor: pointer;
+    background: #e8e8e8;
 }
 
 .gallery-item .prompt {
-    font-size: 0.75rem;  /* reduced from 0.8rem */
-    margin-top: 0.5rem;
+    font-size: 0.75rem;
     color: #666;
+    overflow: auto;
+    word-wrap: break-word;
+    max-height: 3em;
 }
 
 .gallery-item .timestamp {
     margin-top: 5px;
-    font-size: 0.65rem;  /* reduced from 0.7rem */
+    font-size: 0.65rem;
     color: #999;
+    position: absolute;
+    bottom: 55px;
+    right: 8px;
 }
 
 
@@ -283,10 +312,6 @@ small {
     }
 }
 
-/* Step 8: Option Descriptions and Layout */
-.option-item {
-    /* Grid handles layout, add padding/margin if needed */
-}
 
 .option-description {
     font-size: 0.75em;  /* reduced from 0.85em */
@@ -477,7 +502,6 @@ small {
     color: #ccc;
     padding: 10px 0;
     font-size: 17px;
-    background-color: #000;
 }
 
 .close {
@@ -488,5 +512,15 @@ small {
     font-size: 40px;
     font-weight: bold;
     cursor: pointer;
+}
+
+button.smallbutton {
+    font-size: 8px;
+    padding: 5px;
+    margin-right: 5px;
+    background: #fff;
+    color: #45a094;
+    float: right;
+    border: solid 1px gray;
 }
 

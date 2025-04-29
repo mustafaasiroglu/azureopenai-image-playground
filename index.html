@@ -55,6 +55,8 @@
                         </div>
 
                         <label for="prompt">Prompt:</label>
+                        <label id="uploadlabel" for="image-upload" style="display:none; margin-top: -21px; float: right;color: #067bff;">+ Add Image(s)</label>
+                        <input style="display:none;" type="file" id="image-upload" accept="image/*" multiple>
                         <textarea id="prompt" rows="4" placeholder="Enter prompt... (max length varies by model)"></textarea>
 
                         <div class="options">
@@ -124,7 +126,7 @@
                 <!-- Edit Image Tab -->
                 <section id="edit-tab" class="tab-pane">
                     <div id="edit-controls">
-                        <input type="file" id="image-upload" accept="image/*">
+                        <input type="file" id="image-upload" accept="image/*" multiple>
                         <textarea id="edit-prompt" rows="4" placeholder="Describe the changes you want to make..."></textarea>
                         <button id="edit-button" disabled>Edit Image</button>
                         <br><br>
