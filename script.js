@@ -334,6 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     requestBody.output_compression = parseInt(outputCompressionInput.value);
                 }
             }
+            if (uploadedimages.length > 0) {
+                requestBody.image = uploadedimages; // New: Add uploaded images to request body
+            }
             // response_format is implicitly b64_json.
         }
 
@@ -355,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('model', selectedModel);
                 formData.append('prompt', prompt);
                 formData.append('n', parseInt(nInput.value) || 1);
-                formData.append('image', uploadedimages); // Send the actual File object
+                formData.append('image', uploadedimages[0]); // Send the actual File object
                 formData.append('size', sizeSelect.value);
                 formData.append('quality', qualitySelect.value);
                 formData.append('background', backgroundSelect.value);
