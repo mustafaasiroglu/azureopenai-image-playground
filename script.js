@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tabId = button.getAttribute('data-tab');
             if(tabId === 'edit'){
                 document.getElementById('uploadlabel').style.display = 'block'; // Show image upload for edit tab
-                document.getElementById('masklabel').style.display = 'block'; // Show mask upload for edit tab
+                document.getElementById('masklabel').style.display = 'none'; // Show mask upload for edit tab
             }
             else{
                 document.getElementById('uploadlabel').style.display = 'none'; // Hide image upload for other tabs
@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('uploadlabel').innerHTML = uploadedimages.length + " Image(s) selected";
             document.getElementById('uploadlabel').setAttribute("title", uploadedimages.map(file => file.name).join(", ")); // Show file names on hover
             if(uploadedimages.length == 1){
-                document.getElementById('masklabel').style.display = 'block';
                 document.getElementById('masklabel').disabled = false; 
             }
         } else {
