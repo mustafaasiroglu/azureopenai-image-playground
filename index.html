@@ -55,9 +55,12 @@
                         </div>
 
                         <label for="prompt">Prompt:</label>
-                        <label id="uploadlabel" for="image-upload" style="display:none; margin-top: -21px; float: right;color: #067bff;">+ Add Image(s)</label>
+                        <label id="masklabel" for="mask-upload" style="display:none; margin-left: 15px; margin-top: -21px; float: right;color: #008a30;"> + Add Mask </label>
+                        <input style="display:none;" type="file" id="mask-upload" accept="image/*">
+                        
+                        <label id="uploadlabel" for="image-upload" style="display:none; margin-top: -21px; float: right;color: #067bff;"> + Add Image(s) </label>
                         <input style="display:none;" type="file" id="image-upload" accept="image/*" multiple>
-                        <textarea id="prompt" rows="4" placeholder="Enter prompt... (max length varies by model)"></textarea>
+                        <textarea id="prompt" rows="4" placeholder="eg. generate a portrait, pixel-art style, of a grey tabby cat dressed as a blond woman on a dark background."></textarea>
 
                         <div class="options">
                             <div class="option-item">
@@ -157,6 +160,8 @@
         <div id="modalCaption">Prompt:</div>
     </div>
 
+    <!-- Add this before your main script -->
+    <script src="db.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

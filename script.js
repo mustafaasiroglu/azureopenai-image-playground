@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const OPENAI_API_ENDPOINT = 'https://openai-mustafa-uaenorth.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview';
 
     let uploadedimages = []; // New: Array to hold uploaded images
+    let uploadedmask = null; // New: Variable to hold uploaded mask
 
     // Modal functionality
     const modal = document.getElementById('settings-modal');
@@ -69,27 +70,48 @@ document.addEventListener('DOMContentLoaded', () => {
             const tabId = button.getAttribute('data-tab');
             if(tabId === 'edit'){
                 document.getElementById('uploadlabel').style.display = 'block'; // Show image upload for edit tab
+                document.getElementById('masklabel').style.display = 'block'; // Show mask upload for edit tab
             }
             else{
                 document.getElementById('uploadlabel').style.display = 'none'; // Hide image upload for other tabs
+                document.getElementById('masklabel').style.display = 'none';
             }
         });
     });
 
     // Image Upload Preview Logic
     const imageUpload = document.getElementById('image-upload');
+    const maskUpload = document.getElementById('mask-upload'); // New: Mask upload input
     const editButton = document.getElementById('edit-button');
 
     imageUpload.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             uploadedimages = Array.from(e.target.files); // Store the actual File objects
-            document.getElementById('uploadlabel').innerHTML = uploadedimages.length + " Image(s) Selected";
+            document.getElementById('uploadlabel').innerHTML = uploadedimages.length + " Image(s) selected";
             document.getElementById('uploadlabel').setAttribute("title", uploadedimages.map(file => file.name).join(", ")); // Show file names on hover
+            if(uploadedimages.length == 1){
+                document.getElementById('masklabel').style.display = 'block';
+                document.getElementById('masklabel').disabled = false; 
+            }
         } else {
             uploadedimages = []; // Clear if no files selected
             document.getElementById('uploadlabel').innerHTML = "+ Add Image(s)";
+            document.getElementById('masklabel').disabled = true; 
         }
     });
+
+    maskUpload.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const maskFile = e.target.files[0]; // Store the actual File object
+            uploadedmask = maskFile; // Store the mask file
+            document.getElementById('masklabel').innerHTML = " + 1 mask added";
+            document.getElementById('masklabel').setAttribute("title", maskFile.name); // Show file name on hover
+        } else {
+            document.getElementById('masklabel').innerHTML = "+ Add Mask";
+        }
+    });
+
+    
 
     // --- Model Parameter Definitions ---
     const modelOptions = {
@@ -358,7 +380,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('model', selectedModel);
                 formData.append('prompt', prompt);
                 formData.append('n', parseInt(nInput.value) || 1);
-                formData.append('image', uploadedimages[0]); // Send the actual File object
+                uploadedimages.forEach((file, index) => {
+                    formData.append('image[]', file); // Send the File object directly
+                });
                 formData.append('size', sizeSelect.value);
                 formData.append('quality', qualitySelect.value);
                 formData.append('background', backgroundSelect.value);
@@ -446,11 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }); // End DOMContentLoaded
 
 // Function to save image to history
-function saveToHistory(imageData, prompt) {
+async function saveToHistory(imageData, prompt) {
     try {
-
-        const history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-        
         const newItem = {
             id: Date.now(),
             imageData,
@@ -459,60 +480,36 @@ function saveToHistory(imageData, prompt) {
             model: document.getElementById('model').value
         };
 
-        history.unshift(newItem);
-        
-        // Keep only the latest MAX_HISTORY_ITEMS
-        if (history.length > MAX_HISTORY_ITEMS) {
-            history.pop();
-        }
-
-        // Check size before saving
-        const historyString = JSON.stringify(history);
-        if (historyString.length > MAX_HISTORY_SIZE) {
-            // Remove oldest items until it fits
-            while (history.length > 0 && JSON.stringify(history).length > MAX_HISTORY_SIZE) {
-                history.pop();
-            }
-            
-            // If still too big, clear all history
-            if (JSON.stringify(history).length > MAX_HISTORY_SIZE) {
-                console.warn('Image is too large to store in history');
-                throw new Error('Image is too large to store in history');
-            }
-        }
-
-        localStorage.setItem('imageHistory', JSON.stringify(history));
-        updateGallery();
-        
+        await ImageDB.saveImage(newItem);
+        await updateGallery();
     } catch (error) {
         console.error('Failed to save to history:', error);
-        // Show user-friendly error message
         const statusMessage = document.getElementById('status-message');
-        statusMessage.textContent = 'Warning: Could not save to history (storage limit reached)';
+        statusMessage.textContent = 'Warning: Could not save to history';
         statusMessage.style.color = 'orange';
-        
     }
 }
 
 // Function to display the gallery
-function updateGallery() {
-    const gallery = document.getElementById('gallery');
-    const history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
+async function updateGallery() {
+    try {
+        const gallery = document.getElementById('gallery');
+        const history = await ImageDB.getAllImages();
 
-    gallery.innerHTML = history.map(item => `
-        <div class="gallery-item" data-id="${item.id}">
-            <img src="${item.imageData}" alt="${item.prompt}" 
-                 onclick="showInMainView('${item.imageData}', '${item.prompt}')">
-            
-            <div class="prompt">${item.prompt}</div>
-            <div class="timestamp">
-                <button class="smallbutton" title="Download" onclick="downloadHistoryItem(${item.id})">⬇️</button>
-                <button class="smallbutton" title="Delete" onclick="deleteHistoryItem(${item.id})">❌</button> 
+        gallery.innerHTML = history.map(item => `
+            <div class="gallery-item" data-id="${item.id}">
+                <div class="timestamp">
+                    <button class="smallbutton" title="Delete" onclick="deleteHistoryItem(${item.id})">❌</button> 
+                    <button class="smallbutton" title="Download" onclick="downloadHistoryItem(${item.id})">⬇️</button>
+                </div>
+                <img src="${item.imageData}" alt="${item.prompt}" 
+                     onclick="showInMainView('${item.imageData}', '${item.prompt}')">
+                <div class="prompt">${item.prompt}</div>
             </div>
-        </div>
-    `).join('');
-
-    //${new Date(item.timestamp).toLocaleString("tr-TR")}
+        `).join('');
+    } catch (error) {
+        console.error('Failed to update gallery:', error);
+    }
 }
 
 // Function to show image in main view
@@ -530,26 +527,30 @@ function showInMainView(imageData, prompt) {
 }
 
 // Function to delete history item
-function deleteHistoryItem(id) {
-    const history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-    const newHistory = history.filter(item => item.id !== id);
-    localStorage.setItem('imageHistory', JSON.stringify(newHistory));
-    updateGallery();
+async function deleteHistoryItem(id) {
+    try {
+        await ImageDB.deleteImage(id);
+        await updateGallery();
+    } catch (error) {
+        console.error('Failed to delete item:', error);
+    }
 }
 
 // Function to download history item
-function downloadHistoryItem(id) {
-    const history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-    const item = history.find(item => item.id === id);
-    if (item) {
-        const link = document.createElement('a');
-        link.href = item.imageData;
-        link.download = `generated_image_${id}.png`; // Change extension based on format if needed
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else {
-        console.error('Item not found in history:', id);
+async function downloadHistoryItem(id) {
+    try {
+        const history = await ImageDB.getAllImages();
+        const item = history.find(item => item.id === id);
+        if (item) {
+            const link = document.createElement('a');
+            link.href = item.imageData;
+            link.download = `generated_image_${id}.png`; // Change extension based on format if needed
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    } catch (error) {
+        console.error('Failed to download item:', error);
     }
 }
 
