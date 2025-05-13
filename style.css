@@ -407,7 +407,6 @@ small {
 .modal-content {
     background-color: #fff;
     margin: 15% auto;
-    padding: 20px;
     border-radius: 8px;
     width: auto;
     max-height: 600px;
@@ -522,5 +521,46 @@ button.smallbutton {
     color: #45a094;
     float: right;
     border: solid 1px gray;
+}
+
+.modal-toolbar {
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    z-index: 2;
+}
+
+
+
+#maskCanvas {
+    cursor: crosshair;
+    margin: auto;
+    display: block;
+    /* max-width: 90%; */
+    max-height: 80%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* border: 5px solid yellow; */
+    background-color: #ffffff85;
+}
+
+.modal-toolbar button {
+    padding: 5px 10px;
+    margin-left: 10px;
+    background-color: #d3c500;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-toolbar button:hover {
+    background-color: #a3a000;
+}
+
+.drawing-cursor {
+    cursor: none !important; /* Hide the default cursor */
 }
 

@@ -11,7 +11,7 @@
 
     <!-- Move the api-key-section outside the container -->
     <div class="modal" id="settings-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="padding: 25px;">
             <span class="close-button">&times;</span>
             <section id="api-key-section">
                 <h2>Configuration</h2>
@@ -55,9 +55,11 @@
                         </div>
 
                         <label for="prompt">Prompt:</label>
-                        <label id="masklabel" for="mask-upload" style="display:none; margin-left: 15px; margin-top: -21px; float: right;color: #008a30;"> + Add Mask </label>
+                        <label id="masklabel" for="mask-upload" style="display:none; margin-left: 15px; margin-top: -21px; float: right;color: #008a30;"> + Upload Mask </label>
                         <input style="display:none;" type="file" id="mask-upload" accept="image/*">
                         
+                        <label id="mask-create" style="margin-left: 15px; margin-top: -21px; float: right;color: #b95c0b;"></label>
+
                         <label id="uploadlabel" for="image-upload" style="display:none; margin-top: -21px; float: right;color: #067bff;"> + Add Image(s) </label>
                         <input style="display:none;" type="file" id="image-upload" accept="image/*" multiple>
                         <textarea id="prompt" rows="4" placeholder="eg. generate a portrait, pixel-art style, of a grey tabby cat dressed as a blond woman on a dark background."></textarea>
@@ -156,7 +158,15 @@
 
     <div id="imageModal" class="modal">
         <span class="modal-close">&times;</span>
-        <img class="modal-content" id="modalImage">
+        <div class="modal-toolbar">
+            <button id="createMaskBtn">Create Mask</button>
+            <button id="saveMaskBtn" style="display: none;">Download Mask</button>
+            <button id="cancelMaskBtn" style="display: none;">Cancel</button>
+        </div>
+        <div class="modal-content-wrapper">
+            <img class="modal-content" id="modalImage">
+            <canvas id="maskCanvas" style="display: none;"></canvas>
+        </div>
         <div id="modalCaption">Prompt:</div>
     </div>
 

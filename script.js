@@ -33,6 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedimages = []; // New: Array to hold uploaded images
     let uploadedmask = null; // New: Variable to hold uploaded mask
 
+    // Mask drawing functionality
+    let isDrawing = false;
+    let maskContext = null;
+    let originalImage = null;
+
+    // Add these variables at the top with other DOM elements
+    const createMaskBtn = document.getElementById('createMaskBtn');
+    const saveMaskBtn = document.getElementById('saveMaskBtn');
+    const cancelMaskBtn = document.getElementById('cancelMaskBtn');
+    const maskCanvas = document.getElementById('maskCanvas');
+    const modalImage = document.getElementById('modalImage');
+
     // Modal functionality
     const modal = document.getElementById('settings-modal');
     const settingsButton = document.getElementById('model-settings');
@@ -63,19 +75,23 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             // Remove active class from all buttons and panes
             tabButtons.forEach(btn => btn.classList.remove('active'));
-            
-
-            // Add active class to clicked button and corresponding pane
             button.classList.add('active');
             const tabId = button.getAttribute('data-tab');
             if(tabId === 'edit'){
                 document.getElementById('uploadlabel').style.display = 'block'; // Show image upload for edit tab
-                document.getElementById('masklabel').style.display = 'none'; // Show mask upload for edit tab
+                document.getElementById('masklabel').style.display = 'block'; // Show mask upload for edit tab
             }
             else{
                 document.getElementById('uploadlabel').style.display = 'none'; // Hide image upload for other tabs
                 document.getElementById('masklabel').style.display = 'none';
             }
+
+            // // Add active class to clicked button and corresponding pane
+            // button.addEventListener('click', () => {
+            //     tabButtons.forEach(btn => btn.classList.remove('active'));
+            //     button.classList.add('active');
+                
+            // });
         });
     });
 
@@ -83,11 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageUpload = document.getElementById('image-upload');
     const maskUpload = document.getElementById('mask-upload'); // New: Mask upload input
     const editButton = document.getElementById('edit-button');
+    const maskCreateButton = document.getElementById('mask-create');
+
 
     imageUpload.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             uploadedimages = Array.from(e.target.files); // Store the actual File objects
             document.getElementById('uploadlabel').innerHTML = uploadedimages.length + " Image(s) selected";
+            document.getElementById('mask-create').innerHTML = "+ New Mask"; // Show create mask button
             document.getElementById('uploadlabel').setAttribute("title", uploadedimages.map(file => file.name).join(", ")); // Show file names on hover
             if(uploadedimages.length == 1){
                 document.getElementById('masklabel').disabled = false; 
@@ -96,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadedimages = []; // Clear if no files selected
             document.getElementById('uploadlabel').innerHTML = "+ Add Image(s)";
             document.getElementById('masklabel').disabled = true; 
+            document.getElementById('mask-create').innerHTML = ""; 
         }
     });
 
@@ -106,12 +126,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('masklabel').innerHTML = " + 1 mask added";
             document.getElementById('masklabel').setAttribute("title", maskFile.name); // Show file name on hover
         } else {
-            document.getElementById('masklabel').innerHTML = "+ Add Mask";
+            document.getElementById('masklabel').innerHTML = "+ Upload Mask";
         }
     });
 
-    
-
+    // mask create button
+    maskCreateButton.addEventListener('click', () => {
+        if (uploadedimages.length > 0) {
+            const imageFile = uploadedimages[0]; // Use the first uploaded image for mask creation  
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    showInMainView(event.target.result, "Create Mask"); // Show the image in the modal
+                    initializeMaskDrawing(); // Initialize mask drawing
+                };
+                img.src = event.target.result; // Set the image source to the uploaded image
+            };  
+            reader.readAsDataURL(imageFile); // Read the uploaded image file
+        } else {
+            alert('Please upload an image first!'); 
+        }
+    });
     // --- Model Parameter Definitions ---
     const modelOptions = {
         "gpt-image-1": {
@@ -358,6 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (uploadedimages.length > 0) {
                 requestBody.image = uploadedimages; // New: Add uploaded images to request body
             }
+            if (uploadedmask) {
+                requestBody.mask = uploadedmask; // New: Add uploaded mask to request body
+            }
+            // response_format is not explicitly set, but defaults to 'b64_json'.
             // response_format is implicitly b64_json.
         }
 
@@ -382,6 +422,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadedimages.forEach((file, index) => {
                     formData.append('image[]', file); // Send the File object directly
                 });
+                if(uploadedmask){
+                    formData.append('mask', uploadedmask); // Send the mask file directly
+                }
                 formData.append('size', sizeSelect.value);
                 formData.append('quality', qualitySelect.value);
                 formData.append('background', backgroundSelect.value);
@@ -574,3 +617,244 @@ document.getElementById('imageModal').onclick = function(e) {
         this.style.display = "none";
     }
 }
+
+// Initialize mask drawing functionality
+
+const MIN_BRUSH_SIZE = 10;
+const MAX_BRUSH_SIZE = 100;
+const BRUSH_CHANGE_RATE = 2;
+
+// Add this function after initializeMaskDrawing function
+function adjustBrushSize(e) {
+    e.preventDefault(); // Prevent page scrolling
+    
+    // Get current line width
+    const currentSize = maskContext.lineWidth;
+    
+    // Adjust size based on scroll direction
+    const newSize = currentSize + (e.deltaY > 0 ? -BRUSH_CHANGE_RATE : BRUSH_CHANGE_RATE);
+    
+    // Clamp the brush size between min and max values
+    maskContext.lineWidth = Math.min(Math.max(newSize, MIN_BRUSH_SIZE), MAX_BRUSH_SIZE);
+    
+    // Update cursor size
+    if (maskCanvas.cursorCanvas) {
+        const cursorCanvas = maskCanvas.cursorCanvas;
+        cursorCanvas.width = maskContext.lineWidth;
+        cursorCanvas.height = maskContext.lineWidth;
+        const cursorCtx = cursorCanvas.getContext('2d');
+        cursorCtx.beginPath();
+        cursorCtx.arc(maskContext.lineWidth/2, maskContext.lineWidth/2, maskContext.lineWidth/2, 0, Math.PI * 2);
+        cursorCtx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+        cursorCtx.fill();
+        // Update cursor position to pointer to the center of the cursor
+        const rect = maskCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        cursorCanvas.style.width = maskContext.lineWidth + 'px';
+        cursorCanvas.style.height = maskContext.lineWidth + 'px';
+        cursorCanvas.style.position = 'fixed';
+        cursorCanvas.style.left = (e.clientX - maskContext.lineWidth/2) + 'px';
+        cursorCanvas.style.top = (e.clientY - maskContext.lineWidth/2) + 'px';
+        cursorCanvas.style.pointerEvents = 'none'; // Prevent interference with drawing
+    }
+
+
+
+}
+
+function initializeMaskDrawing() {
+    const canvas = document.getElementById('maskCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Get the natural (original) dimensions of the image
+    const imageWidth = modalImage.naturalWidth;
+    const imageHeight = modalImage.naturalHeight;
+    
+    // Set canvas size to match the original image dimensions
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
+    
+    // Set CSS dimensions to match displayed image size for proper drawing
+    canvas.style.width = modalImage.offsetWidth + 'px';
+    canvas.style.height = modalImage.offsetHeight + 'px';
+    
+    // Store the original image for reference
+    originalImage = modalImage.src;
+    
+    // Show canvas and drawing controls
+    canvas.style.display = 'block';
+    saveMaskBtn.style.display = 'inline';
+    cancelMaskBtn.style.display = 'inline';
+    createMaskBtn.style.display = 'none';
+    
+    // Clear canvas and set drawing style
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'yellow';
+    ctx.lineWidth = 30;
+    ctx.lineCap = 'round';
+    
+    maskContext = ctx;
+
+    // Add cursor canvas
+    const cursorCanvas = document.createElement('canvas');
+    cursorCanvas.style.position = 'fixed';
+    cursorCanvas.style.pointerEvents = 'none';
+    cursorCanvas.style.zIndex = '1000';
+    document.body.appendChild(cursorCanvas);
+    
+    // Add drawing cursor class
+    canvas.classList.add('drawing-cursor');
+    
+    // Update cursor function
+    function updateCursor(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        cursorCanvas.style.left = (e.clientX - ctx.lineWidth/2) + 'px';
+        cursorCanvas.style.top = (e.clientY - ctx.lineWidth/2) + 'px';
+    }
+    
+    // Create cursor
+    cursorCanvas.width = ctx.lineWidth;
+    cursorCanvas.height = ctx.lineWidth;
+    const cursorCtx = cursorCanvas.getContext('2d');
+    cursorCtx.beginPath();
+    cursorCtx.arc(ctx.lineWidth/2, ctx.lineWidth/2, ctx.lineWidth/2, 0, Math.PI * 2);
+    cursorCtx.fillStyle = 'rgba(255, 255, 0, 0.3)'; // Semi-transparent yellow
+    cursorCtx.fill();
+    
+    // Add cursor event listeners
+    canvas.addEventListener('wheel', adjustBrushSize);
+    canvas.addEventListener('mousemove', updateCursor);
+    canvas.addEventListener('mouseenter', () => {
+        cursorCanvas.style.display = 'block';
+    });
+    canvas.addEventListener('mouseleave', () => {
+        cursorCanvas.style.display = 'none';
+    });
+    
+    // Store cursor canvas reference for cleanup
+    canvas.cursorCanvas = cursorCanvas;
+    
+    // Add drawing event listeners
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    
+    const rect = maskCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Use the same coordinates for both cursor and drawing
+    const scaleX = maskCanvas.width / maskCanvas.offsetWidth;
+    const scaleY = maskCanvas.height / maskCanvas.offsetHeight;
+    
+    maskContext.lineTo(x * scaleX, y * scaleY);
+    maskContext.stroke();
+    maskContext.beginPath();
+    maskContext.moveTo(x * scaleX, y * scaleY);
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    draw(e); // Draw a single point when clicking
+}
+
+function stopDrawing() {
+    isDrawing = false;
+    maskContext.beginPath(); // Start a new path
+}
+
+function saveMask() {
+    const canvas = document.getElementById('maskCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Create a temporary canvas to prepare the final mask
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Fill with black background
+    tempCtx.fillStyle = 'black';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Set composite operation to copy only the drawn parts
+    tempCtx.globalCompositeOperation = 'destination-out';
+    
+    // Fill with transparent background
+    //tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Draw the mask content in black
+    //tempCtx.fillStyle = 'black';
+    tempCtx.drawImage(canvas, 0, 0);
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.download = `mask_${Date.now()}.png`;
+    link.href = tempCanvas.toDataURL('image/png');
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Store mask data for potential API use
+    uploadedmask = link.href;
+    
+    // Reset the modal to original state
+    resetMaskDrawing();
+    
+    // Show confirmation
+    const statusMessage = document.getElementById('status-message');
+    statusMessage.textContent = 'Mask saved successfully!';
+    statusMessage.style.color = 'green';
+    
+    // Close the modal
+    document.getElementById('imageModal').style.display = 'none';
+}
+
+function resetMaskDrawing() {
+    
+    const canvas = document.getElementById('maskCanvas');
+
+    canvas.removeEventListener('wheel', adjustBrushSize);
+    
+    // Remove cursor canvas if it exists
+    if (canvas.cursorCanvas) {
+        canvas.cursorCanvas.remove();
+        canvas.cursorCanvas = null;
+    }
+    
+    // Remove drawing cursor class
+    canvas.classList.remove('drawing-cursor');
+    
+
+    // Hide canvas and reset buttons
+    maskCanvas.style.display = 'none';
+    saveMaskBtn.style.display = 'none';
+    cancelMaskBtn.style.display = 'none';
+    createMaskBtn.style.display = 'inline';
+    
+    // Clear canvas
+    if (maskContext) {
+        maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    }
+    
+    // Reset image
+    if (originalImage) {
+        modalImage.src = originalImage;
+    }
+}
+
+// Add event listeners for the mask buttons
+createMaskBtn.addEventListener('click', initializeMaskDrawing);
+saveMaskBtn.addEventListener('click', saveMask);
+cancelMaskBtn.addEventListener('click', resetMaskDrawing);
