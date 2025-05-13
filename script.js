@@ -1,5 +1,9 @@
 const MAX_HISTORY_ITEMS = 20; // New
 const MAX_HISTORY_SIZE = 5 * 1024 * 1024; // 5MB limit for localStorage
+    // Mask drawing functionality
+let isDrawing = false;
+let maskContext = null;
+let originalImage = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
@@ -33,14 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedimages = []; // New: Array to hold uploaded images
     let uploadedmask = null; // New: Variable to hold uploaded mask
 
-    // Mask drawing functionality
-    let isDrawing = false;
-    let maskContext = null;
-    let originalImage = null;
+
 
     // Add these variables at the top with other DOM elements
     const createMaskBtn = document.getElementById('createMaskBtn');
     const saveMaskBtn = document.getElementById('saveMaskBtn');
+    const applyMaskBtn = document.getElementById('applyMaskBtn');
     const cancelMaskBtn = document.getElementById('cancelMaskBtn');
     const maskCanvas = document.getElementById('maskCanvas');
     const modalImage = document.getElementById('modalImage');
@@ -644,7 +646,7 @@ function adjustBrushSize(e) {
         cursorCanvas.height = maskContext.lineWidth;
         const cursorCtx = cursorCanvas.getContext('2d');
         cursorCtx.beginPath();
-        cursorCtx.arc(maskContext.lineWidth/2, maskContext.lineWidth/2, maskContext.lineWidth/2, 0, Math.PI * 2);
+        cursorCtx.arc(maskContext.lineWidth/2, maskContext.lineWidth/2, maskContext.lineWidth/4, 0, Math.PI * 2);
         cursorCtx.fillStyle = 'rgba(255, 255, 0, 0.3)';
         cursorCtx.fill();
         // Update cursor position to pointer to the center of the cursor
@@ -685,13 +687,14 @@ function initializeMaskDrawing() {
     // Show canvas and drawing controls
     canvas.style.display = 'block';
     saveMaskBtn.style.display = 'inline';
+    applyMaskBtn.style.display = 'inline';
     cancelMaskBtn.style.display = 'inline';
     createMaskBtn.style.display = 'none';
     
     // Clear canvas and set drawing style
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 30;
+    ctx.lineWidth = 60;
     ctx.lineCap = 'round';
     
     maskContext = ctx;
@@ -721,7 +724,7 @@ function initializeMaskDrawing() {
     cursorCanvas.height = ctx.lineWidth;
     const cursorCtx = cursorCanvas.getContext('2d');
     cursorCtx.beginPath();
-    cursorCtx.arc(ctx.lineWidth/2, ctx.lineWidth/2, ctx.lineWidth/2, 0, Math.PI * 2);
+    cursorCtx.arc(ctx.lineWidth/2, ctx.lineWidth/2, ctx.lineWidth/4, 0, Math.PI * 2);
     cursorCtx.fillStyle = 'rgba(255, 255, 0, 0.3)'; // Semi-transparent yellow
     cursorCtx.fill();
     
@@ -772,7 +775,7 @@ function stopDrawing() {
     maskContext.beginPath(); // Start a new path
 }
 
-function saveMask() {
+function saveMask(download = true) {
     const canvas = document.getElementById('maskCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -801,13 +804,16 @@ function saveMask() {
     link.download = `mask_${Date.now()}.png`;
     link.href = tempCanvas.toDataURL('image/png');
     
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Store mask data for potential API use
-    uploadedmask = link.href;
+    if (download) {
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        uploadedmask = link.href;
+        document.getElementById('masklabel').innerHTML = " + 1 mask added";
+        document.getElementById('masklabel').setAttribute("title", "Custom Mask");
+    }
     
     // Reset the modal to original state
     resetMaskDrawing();
@@ -840,6 +846,7 @@ function resetMaskDrawing() {
     // Hide canvas and reset buttons
     maskCanvas.style.display = 'none';
     saveMaskBtn.style.display = 'none';
+    applyMaskBtn.style.display = 'none';
     cancelMaskBtn.style.display = 'none';
     createMaskBtn.style.display = 'inline';
     
@@ -857,4 +864,5 @@ function resetMaskDrawing() {
 // Add event listeners for the mask buttons
 createMaskBtn.addEventListener('click', initializeMaskDrawing);
 saveMaskBtn.addEventListener('click', saveMask);
+applyMaskBtn.addEventListener('click', saveMask(false)); 
 cancelMaskBtn.addEventListener('click', resetMaskDrawing);
