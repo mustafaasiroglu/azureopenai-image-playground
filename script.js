@@ -398,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (uploadedmask) {
                 requestBody.mask = uploadedmask; // New: Add uploaded mask to request body
+                requestBody.input_fidelity = "high";
             }
             // response_format is not explicitly set, but defaults to 'b64_json'.
             // response_format is implicitly b64_json.
