@@ -426,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if(uploadedmask){
                     formData.append('mask', uploadedmask); // Send the mask file directly
+                    formData.append('input_fidelity',"high"),
                 }
                 formData.append('size', sizeSelect.value);
                 formData.append('quality', qualitySelect.value);
