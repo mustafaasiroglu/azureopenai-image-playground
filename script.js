@@ -25,14 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dalle3OptionsDiv = document.getElementById('dalle3-options'); // New
     const styleSelect = document.getElementById('style'); // Moved inside dalle3OptionsDiv in HTML, but reference is fine
 
-    const gptImage1OptionsDiv = document.getElementById('gpt-image-1-options'); // New
+    const gptImage1OptionsDiv = document.getElementById('gpt-image-2-options'); // New
     const backgroundSelect = document.getElementById('background'); // New
     const moderationSelect = document.getElementById('moderation'); // New
     const outputFormatSelect = document.getElementById('output_format'); // New
     const outputCompressionInput = document.getElementById('output_compression'); // New
 
     const OPENAI_API_KEY_NAME = 'openai_api_key';
-    const OPENAI_API_ENDPOINT = 'https://openai-mustafa-uaenorth.openai.azure.com/openai/deployments/gpt-image-1/images/generations?api-version=2025-04-01-preview';
+    const OPENAI_API_ENDPOINT = 'https://openai-mustafa-uaenorth.openai.azure.com/openai/deployments/gpt-image-2/images/generations?api-version=2025-04-01-preview';
 
     let uploadedimages = []; // New: Array to hold uploaded images
     let uploadedmask = null; // New: Variable to hold uploaded mask
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     // --- Model Parameter Definitions ---
     const modelOptions = {
-        "gpt-image-1": {
+        "gpt-image-2": {
             sizes: ["auto", "1024x1024", "1536x1024", "1024x1536"],
             qualities: ["auto", "high", "medium", "low"],
             maxN: 10,
@@ -244,9 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show/Hide Model Specific Sections
         dalle3OptionsDiv.style.display = options.supportsStyle ? 'block' : 'none';
-        // Show/Hide GPT-Image-1 specific options individually
-        const gptImage1Options = document.querySelectorAll('.gpt-image-1-option');
-        const showGpt1Options = selectedModel === 'gpt-image-1';
+        // Show/Hide GPT-Image-2 specific options individually
+        const gptImage1Options = document.querySelectorAll('.gpt-image-2-option');
+        const showGpt1Options = selectedModel === 'gpt-image-2';
         gptImage1Options.forEach(el => {
             el.style.display = showGpt1Options ? 'block' : 'none';
         });
@@ -264,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateOptionsUI(e.target.value);
     });
 
-    // Update compression enable/disable when output format changes (only if gpt-image-1 is active)
+    // Update compression enable/disable when output format changes (only if gpt-image-2 is active)
     outputFormatSelect.addEventListener('change', (e) => {
-        if (modelSelect.value === 'gpt-image-1') {
+        if (modelSelect.value === 'gpt-image-2') {
             const compressionEnabled = ['jpeg', 'webp'].includes(e.target.value);
             outputCompressionInput.disabled = !compressionEnabled;
         }
@@ -367,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // DALL-E 2 requires size. n can be > 1.
             requestBody.size = sizeSelect.value;
             // quality is not applicable. response_format defaults to 'url'.
-        } else if (selectedModel === 'gpt-image-1') {
-            // gpt-image-1 has many optional parameters.
+        } else if (selectedModel === 'gpt-image-2') {
+            // gpt-image-2 has many optional parameters.
             // Size is optional (defaults to auto)
             if (sizeSelect.value !== 'auto') {
                 requestBody.size = sizeSelect.value;
